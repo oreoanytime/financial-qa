@@ -1,46 +1,45 @@
 package com.financial.qa;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.beans.Transient;
-
-
 public class IbanValidatorTest {
-    
+
     private final IbanValidator validator = new IbanValidator();
 
-    // Positive Test (Happy path)
-    @Test
-    public void testValidIban() {
-        String iban = "GB82WEST12345698765432";
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "GB82WEST12345698765432", // Valid GB
+        "DE89370400440532013000", // Valid DE
+        "FR7630006000011234567890189" // Valid FR
+    })
+    public void testValidIbans(String iban) {
         assertTrue(validator.isValid(iban));
     }
 
-    // Negative Tests
-    @Test
-    public void testInvalidIbanLength() {
-        String iban = "GB82WEST123";
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "GB82WEST123", // too short
+        "GB82WEST1234569@#65432", // invalid characters
+        "", // empty
+        "    ", // spaces
+        "1234567890123456789012345678901234567890" // too long
+    })
+    public void testInvalidIbans(String iban) {
         assertFalse(validator.isValid(iban));
     }
 
-    // Check Bad Input
-    @Test
-    public void testInvalidCharacters() {
-        String iban = "GB82WEST1234569@#65432";
-        assertFalse(validator.isValid(iban));
-    }
-
-    // Check Null
     @Test
     public void testNullIban() {
         assertFalse(validator.isValid(null));
     }
 
-    // Check Empty String
     @Test
-    public void testEmptyIban() {
-        assertFalse(validator.isValid(""));
+    public void testInvalidMod97Checksum() {
+        // Valid format but wrong checksum
+        String iban = "GB82WEST12345698765431"; // wrong check digits
+        assertFalse(validator.isValid(iban));
     }
 }
-
